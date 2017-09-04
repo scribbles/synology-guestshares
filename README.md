@@ -13,7 +13,7 @@ As of Synology DSM 6.1.3, users are unable to control which subdirectories of a 
 2. Set `rootshare` and `guestshare` vars at the top of the script to the appropriate names of your shares
 3. Open SSH session and su to root (`sudo su -`)
 4. Add a share for guest. This will write the name of the share to `$rootshare/mounts` and the bind mount will now be visible.
-  - `$ guestshares.sh addshare Photos`
+  - `# guestshares.sh addshare Photos`
 5. Setup triggered tasks in DSM for mounting/unmounting on boot and shutdown. (Control Panel > Task Scheduler > Create > Triggered Task > User-defined script)
   - Set event to `Boot-up` and User-defined script to `/path/to/guestshares.sh mount`
   - Set event to `Shutdown` and User-defined script to `/path/to/guestshares.sh unmount`
