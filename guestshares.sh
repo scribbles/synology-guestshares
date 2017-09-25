@@ -1,55 +1,79 @@
 #!/bin/bash
-rootshare=/volume1/data
 guestshare=/volume1/share
+mountlist=/volume1/data/mounts
 
 mount() {
-	while read mount; do
-		/bin/mount -obind $rootshare/$mount $guestshare/$mount
-	done < $rootshare/mounts
+	while read mount
+	do
+		/bin/mount -obind "$mount" "$guestshare/${mount##*/}"
+	done < $mountlist
 }
 
 unmount() {
-	while read mount; do
-		/bin/umount $guestshare/$mount
-	done < $rootshare/mounts 
+	while read mount
+	do
+		/bin/umount "$guestshare/${mount##*/}"
+	done < $mountlist
 }
 
 addshare() {
-	/bin/mkdir $guestshare/$1
-	if [[ $? ]]; then 
-		/bin/mount -obind /volume1/data/$1/ /volume1/share/$1/
-		/bin/echo "$1" >> $rootshare/mounts
-	else
-		/bin/echo "mkdir failed!"
-		exit 1
-	fi
+	for mount in "$@"
+	do
+		/bin/mkdir "$guestshare/${mount##*/}"
+	
+		if [[ $? ]]
+		then 
+			/bin/mount -obind "$mount" "$guestshare/${mount##*/}"
+			/bin/echo "$mount" >> $mountlist
+		else
+			/bin/echo "mkdir failed!"
+			exit 1
+		fi
+	done
 }
 
 removeshare() {
-	/bin/umount $guestshare/$1
-	if [[ $? ]]; then 
-		/bin/rmdir /volume1/share/$1/
-		/bin/echo "$(/bin/grep -v "$1" $rootshare/mounts)" > $rootshare/mounts
-	else 
-		/bin/echo "umount failed!"
+	for mount in "$@"
+	do
+		/bin/umount "$mount"
+	
+		if [[ $? ]]
+		then 
+			/bin/rmdir "$guestshare/${mount##*/}"
+			/bin/sed -i "\%$mount%d" $mountlist
+		else
+			/bin/echo "umount failed!"
+			exit 1
+		fi
+	done
+}
+
+mountlistexists() {
+	if [[ ! -e "$mountlist" ]]
+	then
+		echo "$mountlist not found, use addshare to populate."
 		exit 1
 	fi
 }
 
 case $1 in 
 	mount)
+		mountlistexists
 		mount
 	;;
 	unmount)
+		mountlistexists
 		unmount
 	;;
 	addshare)
-		addshare $2
+		shift
+		addshare "$@"
 	;;
 	removeshare)
-		removeshare $2
+		shift
+		removeshare "$@"
 	;;
 	*)
-		/bin/echo "Usage: $0 '(mount|unmount|addshare DIRNAME|removeshare DIRNAME)'"
+		/bin/echo "Usage: $0 '(mount|unmount|addshare DIRLIST|removeshare DIRLIST)'"
 	;;
 esac
