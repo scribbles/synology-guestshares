@@ -26,7 +26,7 @@ addshare() {
 			/bin/mount -obind "$mount" "$guestshare/${mount##*/}"
 			/bin/echo "$mount" >> $mountlist
 		else
-			/bin/echo "mkdir failed!"
+			/bin/echo "mkdir $mount failed!"
 			exit 1
 		fi
 	done
@@ -41,8 +41,12 @@ removeshare() {
 		then 
 			/bin/rmdir "$guestshare/${mount##*/}"
 			/bin/sed -i "\%$mount%d" $mountlist
+			if [[ ! -s "$mountlist" ]]
+			then
+				rm -f "$mountlist"
+			fi
 		else
-			/bin/echo "umount failed!"
+			/bin/echo "umount $mount failed!"
 			exit 1
 		fi
 	done
