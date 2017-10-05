@@ -1,19 +1,19 @@
 #!/bin/bash
-guestshare=/volume1/share
-mountlist=/volume1/data/mounts
+guestshare="/volume1/share"
+mountlist="/volume1/data/mounts"
 
 mount() {
 	while read mount
 	do
 		/bin/mount -obind "$mount" "$guestshare/${mount##*/}"
-	done < $mountlist
+	done < "$mountlist"
 }
 
 unmount() {
 	while read mount
 	do
 		/bin/umount "$guestshare/${mount##*/}"
-	done < $mountlist
+	done < "$mountlist"
 }
 
 addshare() {
